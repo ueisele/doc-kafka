@@ -5,7 +5,7 @@ skinparam nodesep 1
 skinparam ranksep 1
 
 node Zookeeper {
-    () "/config/changes" as config_changes
+    () "+/config/changes (child)" as config_changes
 }
 
 node Kafka {

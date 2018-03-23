@@ -5,13 +5,13 @@ node Zookeeper {
     () "-/controller" as zk_controller
 
     () "-/brokers/ids" as zk_broker_ids
-    () "/brokers/topics" as zk_broker_topics
-    () "/brokers/topics/${topic}" as zk_broker_topic
-    () "/brokers/topics/${topic}/partitions/${partitionId}/state" as zk_broker_topic_partition_leader_and_isr
+    () "+/brokers/topics" as zk_broker_topics
+    () "-/brokers/topics/${topic}" as zk_broker_topic
+    () "-/brokers/topics/${topic}/partitions/${partitionId}/state" as zk_broker_topic_partition_leader_and_isr
 
-    () "/admin/delete_topics" as zk_admin_delete_topics
-    () "/admin/reassign_partitions" as zk_admin_reassign_partitions
-    () "/admin/preferred_replica_election" as zk_admin_preferred_replica_leader_election
+    () "+/admin/delete_topics" as zk_admin_delete_topics
+    () "+/admin/reassign_partitions" as zk_admin_reassign_partitions
+    () "+/admin/preferred_replica_election" as zk_admin_preferred_replica_leader_election
 
     () "-/isr_change_notification" as zk_isr_change_notification
 }
@@ -26,7 +26,7 @@ node Kafka {
     }
 
     package Controller {
-            zk_controller -- [KafkaController] : controller change (root)
+        zk_controller -- [KafkaController] : controller change (root)
 
         zk_broker_ids -- [KafkaController] : broker change (child)
         zk_broker_topics -- [KafkaController] : topic change (child)
