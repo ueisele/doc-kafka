@@ -1,0 +1,46 @@
+@startuml
+skinparam componentStyle uml2
+
+node Zookeeper {
+    () "-/controller" as zk_controller
+
+    () "-/brokers/ids" as zk_broker_ids
+    () "/brokers/topics" as zk_broker_topics
+    () "/brokers/topics/${topic}" as zk_broker_topic
+    () "/brokers/topics/${topic}/partitions/${partitionId}/state" as zk_broker_topic_partition_leader_and_isr
+
+    () "/admin/delete_topics" as zk_admin_delete_topics
+    () "/admin/reassign_partitions" as zk_admin_reassign_partitions
+    () "/admin/preferred_replica_election" as zk_admin_preferred_replica_leader_election
+
+    () "-/isr_change_notification" as zk_isr_change_notification
+}
+
+node Kafka {
+    package Server {
+        component KafkaApis {
+            package "Shutdown API" {
+                () "-ControlledShutdown" as kafkaapis_controlled_shutdown
+            }
+        }
+    }
+
+    package Controller {
+            zk_controller -- [KafkaController] : controller change (root)
+
+        zk_broker_ids -- [KafkaController] : broker change (child)
+        zk_broker_topics -- [KafkaController] : topic change (child)
+        zk_broker_topic -- [KafkaController] : partition modification (root)
+        zk_broker_topic_partition_leader_and_isr -- [KafkaController] : isr changes for reassigned partitions (root)
+
+        zk_admin_delete_topics -- [KafkaController] : topic deletion (child)
+        zk_admin_reassign_partitions -- [KafkaController] : partition reassignment (root)
+        zk_admin_preferred_replica_leader_election -- [KafkaController] : preferred replica leader election (root)
+
+        zk_isr_change_notification -- [KafkaController] : isr change notification (child)
+
+        [KafkaController] -- kafkaapis_controlled_shutdown
+    }
+}
+
+@enduml

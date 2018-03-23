@@ -1,0 +1,121 @@
+@startuml
+skinparam componentStyle uml2
+
+skinparam nodesep 1
+skinparam ranksep 1
+
+node Zookeeper {
+    () "/config/changes" as config_changes
+}
+
+node Kafka {
+    package Server {
+        component KafkaApis {
+            () "+ApiVersions"
+            package "Admin API" {
+                () "+DescribeConfigs" as kafkaapis_describe_configs
+                () "+AlterConfigs" as kafkaapis_alter_configs
+                () "+CreateTopics" as kafkaapis_create_topics
+                () "+DeleteTopics" as kafkaapis_delete_topics
+            }
+            package "Metadata API" {
+                () "+Metadata" as kafkaapis_metadata
+                () "-UpdateMetadata" as kafkaapis_update_metadata
+            }
+            package "Record API" {
+                () "+Produce" as kafkaapis_produce
+                () "+Fetch" as kafkaapis_fetch
+                () "+DeleteRecords" as kafkaapis_delete_records
+            }
+            package "Replica API" {
+                () "-LeaderAndIsr" as kafkaapis_leader_and_isr
+                () "-StopReplica" as kafkaapis_stop_replicas
+            }
+            package "Offset API" {
+                () "+ListOffsets" as kafkaapis_list_offsets
+                () "-OffsetForLeaderEpoch" as kafkaapis_offset_for_leader_epoch
+            }
+            package "Offset Commit/Fetch API" {
+                () "+FindCoordinator" as kafkaapis_find_coordinator
+                () "+OffsetCommit" as kafkaapis_offset_commit
+                () "+OffsetFetch" as kafkaapis_offset_fetch
+            }
+            package "Group API" {
+                () "+ListGroups" as kafkaapis_list_groups
+                () "+DescribeGroups" as kafkaapis_describe_groups
+            }
+            package "Group Membership API" {
+                () "+JoinGroup" as kafkaapis_join_groups
+                () "+SyncGroup" as kafkaapis_sync_groups
+                () "+LeaveGroup" as kafkaapis_leave_groups
+                () "+Heartbeat" as kafkaapis_heartbeat
+            }
+            package "Transaction API" {
+                () "+InitProducerId" as kafkaapis_init_producer_id
+                () "+AddPartitionsToTxn" as kafkaapis_add_partitions_to_txn
+                () "+AddOffsetsToTxn" as kafkaapis_add_offsets_to_txn
+                () "+EndTxn" as kafkaapis_end_txn
+                () "+TxnOffsetCommit" as kafkaapis_txn_offset_commit
+                () "-WriteTxnMarkers" as kafkaapis_write_txn_markers
+            }
+            package "Authorization API" {
+                () "+DescribeAcls" as kafkaapis_describe_acls
+                () "+CreateAcls" as kafkaapis_create_acls
+                () "+DeleteAcls" as kafkaapis_delete_acls
+            }
+        }
+
+        [AdminManager] -- kafkaapis_describe_configs
+        [AdminManager] -- kafkaapis_alter_configs
+        [AdminManager] -- kafkaapis_create_topics
+        [AdminManager] -- kafkaapis_delete_topics
+
+        [MetadataCache] -- kafkaapis_metadata
+        [ReplicaManager] -- kafkaapis_update_metadata
+
+        [ReplicaManager] -- kafkaapis_produce
+        [ReplicaManager] -- kafkaapis_fetch
+        [ReplicaManager] -- kafkaapis_delete_records
+
+        [ReplicaManager] -- kafkaapis_leader_and_isr
+        [GroupCoordinator] -- kafkaapis_leader_and_isr
+        [TransactionCoordinator] -- kafkaapis_leader_and_isr
+        [ReplicaManager] -- kafkaapis_stop_replicas
+        [GroupCoordinator] -- kafkaapis_stop_replicas
+
+        [ReplicaManager] -- kafkaapis_list_offsets
+        [ReplicaManager] -- kafkaapis_offset_for_leader_epoch
+
+        [TransactionCoordinator] -- kafkaapis_find_coordinator
+        [GroupCoordinator] -- kafkaapis_find_coordinator
+        [GroupCoordinator] -- kafkaapis_offset_commit
+        [GroupCoordinator] -- kafkaapis_offset_fetch
+
+        [GroupCoordinator] -- kafkaapis_list_groups
+        [GroupCoordinator] -- kafkaapis_describe_groups
+
+        [GroupCoordinator] -- kafkaapis_join_groups
+        [GroupCoordinator] -- kafkaapis_sync_groups
+        [GroupCoordinator] -- kafkaapis_leave_groups
+        [GroupCoordinator] -- kafkaapis_heartbeat
+
+        kafkaapis_init_producer_id -- [TransactionCoordinator]
+        kafkaapis_add_partitions_to_txn -- [TransactionCoordinator]
+        kafkaapis_add_offsets_to_txn -- [TransactionCoordinator]
+        kafkaapis_end_txn -- [TransactionCoordinator]
+        kafkaapis_txn_offset_commit -- [GroupCoordinator]
+        kafkaapis_write_txn_markers -- [GroupCoordinator]
+        kafkaapis_write_txn_markers -- [ReplicaManager]
+
+        [Authorizer] -- kafkaapis_describe_acls
+        [Authorizer] -- kafkaapis_create_acls
+        [Authorizer] -- kafkaapis_delete_acls
+
+        [ReplicaManager] -> [MetadataCache] : updates and uses
+        [MetadataCache] <- [AdminManager] : uses
+
+        config_changes -- [DynamicConfigManager] : change notification
+    }
+}
+
+@enduml
